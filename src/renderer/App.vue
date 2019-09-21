@@ -5,6 +5,7 @@
     <h1>Writer</h1>
     <button @click="write">Write</button>
     <canvas id="writer-canvas" ref="writerCanvas" width="2" height="2"></canvas>
+    {{Math.floor(progress*100)}}%
   </div>
 </template>
 
@@ -24,25 +25,30 @@
         d1: 1,
         d2: 0,
         previewCtx: null,
-        writerCtx: null
+        writerCtx: null,
+        playSpeed: 11,
+        progress: 0
       }
     },
     watch: {
-      clk() {this.setWriterBits();}
+      clk() {this.setWriterBits();},
+      playSpeed(val) {
+        if(val < 0) this.playSpeed = 0;
+        else if(val > 15) this.playSpeed = 15;
+      }
     },
     methods: {
-      loadImage() {
+      loadImage(filePath) {
         let $vue = this;
         return new Promise((resolve,reject) => {
           let image = new Image();
-          let filePath = "/mnt/d/Git/image2hicarix/static/test.png";
           const data = fs.readFileSync(filePath);
           const base64data = new Buffer(data).toString('base64');
           image.src = `data:image/${path.extname(filePath).substring(1)};base64,${base64data}`;
           image.onload = function(){$vue.previewCtx.drawImage(image,0,0,8,8);resolve()};
         });
       },
-      setWriterBits() {
+      setWriterBits() { //CLK変更で自動的に呼び出される
         let writerCanvas = this.$refs.writerCanvas;
         let ctx = writerCanvas.getContext('2d');
         ctx.fillStyle = (this.clk === 0)?"black":"white";
@@ -53,23 +59,26 @@
         ctx.fillRect(1,1,1,1);
       },
       async write() {
-        await this.loadImage();
+        let folderPath = "/mnt/d/Git/image2hicarix/static/Sequence/";
+        let fileList = fs.readdirSync(folderPath);
         //header
         let data = [1,0,0,1,1,0];
         //page length
-        let pageLength = 1;
+        let pageLength = fileList.length;
         for(let i = 7;i>=0;i--) data.push((pageLength >> i) & 0b1);
         //play speed
-        let playSpeed = 11;
-        for(let i = 3;i>=0;i--) data.push(((playSpeed >> i) & 0b1) > 0?0:1);
+        for(let i = 3;i>=0;i--) data.push(((this.playSpeed >> i) & 0b1) > 0?0:1);
         //reserved
         data.push(0,0,0,0);
         //content
-        let imagedata = this.previewCtx.getImageData(0,0,8,8);
-        for(let x = 0;x<8;x++) {
-          for(let y = 7;y >= 0;y--) {
-            let index = (y*8+x)*4;
-            data.push((imagedata.data[index] > 127)?1:0);
+        for(let file of fileList) {
+          await this.loadImage(path.join(folderPath,file));
+          let imagedata = this.previewCtx.getImageData(0,0,8,8);
+          for(let x = 0;x<8;x++) {
+            for(let y = 7;y >= 0;y--) {
+              let index = (y*8+x)*4;
+              data.push((imagedata.data[index] > 127)?1:0);
+            }
           }
         }
         //footer
@@ -83,13 +92,13 @@
           this.d2 = data[i*2+1];
           this.clk = this.clk === 0?1:0;//クロックは最後に書く
           await sleep(100);
+          this.progress = i / data.length * 2;
         }
       }
     },
     mounted() {
       let canvas = this.$refs.previewCanvas;
       this.previewCtx = canvas.getContext('2d');
-      this.loadImage();
       this.setWriterBits();
     }
   }
