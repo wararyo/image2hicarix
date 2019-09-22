@@ -16,7 +16,10 @@
     </section>
     <section>
       <h1 class="title">Preview</h1>
-      <viewer :images="images" :speed="playSpeed" />
+      <viewer ref="viewer" :images="images" :speed="playSpeed" :isPlaying="isPlaying" />
+      <div class="field">
+        <b-switch v-model="isPlaying">Play</b-switch>
+      </div>
     </section>
     <section>
       <h1 class="title">Writer</h1>
@@ -49,7 +52,8 @@
         playSpeed: 11,
         progress: 0,
         directory: "",
-        images: []
+        images: [],
+        isPlaying: false,
       }
     },
     watch: {
@@ -71,6 +75,7 @@
         });
       },
       async loadImages() {
+        this.images = [];
         let fileList = fs.readdirSync(this.directory);
         for(let file of fileList) {
           this.images.push(await this.loadImage(path.join(this.directory,file)));
@@ -130,6 +135,7 @@
           this.clk = this.clk === 0?1:0;//クロックは最後に書く
           await sleep(100);
           this.progress = i / data.length * 2;
+          this.$refs.viewer.currentFrame = Math.floor(this.images.length * (i / data.length * 2));
         }
       }
     },
