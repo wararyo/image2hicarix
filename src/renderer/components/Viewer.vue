@@ -1,6 +1,7 @@
 <template>
 <section>
   <canvas id="preview-canvas" ref="previewCanvas" width="8" height="8"></canvas>
+  <span>{{currentFrame}}/{{images.length}}</span>
 </section>
 </template>
 
@@ -20,6 +21,7 @@ export default {
       if(this.images.length === 0) return;
       while(val >= this.images.length) val -= this.images.length;
       while(val < 0) val += this.images.length;
+      this.currentFrame = val;
       if(val !== oldval) this.ctx.drawImage(this.images[val],0,0);
     },
     isPlaying(val,oldval) {
@@ -34,7 +36,6 @@ export default {
     this.canvas = this.$refs.previewCanvas;
     this.ctx = this.canvas.getContext('2d');
     console.log(this.isPlaying);
-    this.update();
   },
   methods: {
     async update() {

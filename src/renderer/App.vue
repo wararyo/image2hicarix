@@ -80,6 +80,7 @@
         for(let file of fileList) {
           this.images.push(await this.loadImage(path.join(this.directory,file)));
         }
+        this.isPlaying = true;
       },
       setWriterBits() { //CLK変更で自動的に呼び出される
         let writerCanvas = this.$refs.writerCanvas;
@@ -146,6 +147,9 @@
 </script>
 
 <style lang="scss">
+body {
+  background-color: #FAFAFA;
+}
 #app {
   padding: 16px;
 }
