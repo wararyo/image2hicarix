@@ -1,33 +1,55 @@
 <template>
   <div id="app">
-    <h1>Preview</h1>
-    <canvas id="preview-canvas" ref="previewCanvas" width="8" height="8"></canvas>
-    <h1>Writer</h1>
-    <button @click="write">Write</button>
-    <canvas id="writer-canvas" ref="writerCanvas" width="2" height="2"></canvas>
-    {{Math.floor(progress*100)}}%
+    <section>
+      <h1 class="title">Settings</h1>
+      <b-field label="Directory" label-position="on-border">
+          <b-input v-model="directory" placeholder="/path/to/your/directory/of/images/" expanded></b-input>
+          <p class="control">
+              <b-button class="button is-primary" @click="browse">Browse</b-button>
+          </p>
+      </b-field>
+      <b-button type="is-primary" @click="loadImages">Load</b-button>
+      <b-field label="Speed">
+        <b-numberinput v-model="playSpeed" min="0" max="15" controls-position="compact">
+        </b-numberinput>
+      </b-field>
+    </section>
+    <section>
+      <h1 class="title">Preview</h1>
+      <viewer :images="images" :speed="playSpeed" />
+    </section>
+    <section>
+      <h1 class="title">Writer</h1>
+      <b-button type="is-primary" @click="write">Write</b-button>
+      <canvas id="writer-canvas" ref="writerCanvas" width="2" height="2"></canvas>
+      {{Math.floor(progress*100+0.5)}}%
+    </section>
   </div>
 </template>
 
 <script>
-  import LandingPage from '@/components/LandingPage'
+  import Viewer from '@/components/Viewer'
   const fs = require("fs");
   const path = require("path");
+  const remote = require('electron').remote;
+  const Dialog = remote.dialog;
+  const browserWindow = remote.BrowserWindow;
 
   export default {
     name: 'image2hicarix',
     components: {
-      LandingPage
+      Viewer
     },
     data: function() {
       return {
         clk: 1,
         d1: 1,
         d2: 0,
-        previewCtx: null,
         writerCtx: null,
         playSpeed: 11,
-        progress: 0
+        progress: 0,
+        directory: "",
+        images: []
       }
     },
     watch: {
@@ -45,8 +67,14 @@
           const data = fs.readFileSync(filePath);
           const base64data = new Buffer(data).toString('base64');
           image.src = `data:image/${path.extname(filePath).substring(1)};base64,${base64data}`;
-          image.onload = function(){$vue.previewCtx.drawImage(image,0,0,8,8);resolve()};
+          image.onload = function(){resolve(image)};
         });
+      },
+      async loadImages() {
+        let fileList = fs.readdirSync(this.directory);
+        for(let file of fileList) {
+          this.images.push(await this.loadImage(path.join(this.directory,file)));
+        }
       },
       setWriterBits() { //CLK変更で自動的に呼び出される
         let writerCanvas = this.$refs.writerCanvas;
@@ -58,22 +86,31 @@
         ctx.fillStyle = (this.d2 === 0)?"black":"white";
         ctx.fillRect(1,1,1,1);
       },
+      browse() {
+        Dialog.showOpenDialog(null, {
+            properties: ['openDirectory'],
+            title: 'Select directory of image sequence',
+            defaultPath: this.directory === "" ? "." : path.join(this.directory,"../")
+        }, (folderNames) => {
+            this.directory = folderNames[0];
+        });
+      },
       async write() {
-        let folderPath = "/mnt/d/Git/image2hicarix/static/Sequence/";
-        let fileList = fs.readdirSync(folderPath);
         //header
         let data = [1,0,0,1,1,0];
         //page length
-        let pageLength = fileList.length;
+        let pageLength = this.images.length;
         for(let i = 7;i>=0;i--) data.push((pageLength >> i) & 0b1);
-        //play speed
+        //play speed (negative)
         for(let i = 3;i>=0;i--) data.push(((this.playSpeed >> i) & 0b1) > 0?0:1);
         //reserved
         data.push(0,0,0,0);
         //content
-        for(let file of fileList) {
-          await this.loadImage(path.join(folderPath,file));
-          let imagedata = this.previewCtx.getImageData(0,0,8,8);
+        let canvas = document.createElement('canvas');
+        let ctx = canvas.getContext("2d");
+        for(let image of this.images) {
+          ctx.drawImage(image,0,0);
+          let imagedata = ctx.getImageData(0,0,8,8);
           for(let x = 0;x<8;x++) {
             for(let y = 7;y >= 0;y--) {
               let index = (y*8+x)*4;
@@ -97,8 +134,6 @@
       }
     },
     mounted() {
-      let canvas = this.$refs.previewCanvas;
-      this.previewCtx = canvas.getContext('2d');
       this.setWriterBits();
     }
   }
