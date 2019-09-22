@@ -1,7 +1,7 @@
 <template>
 <section>
   <canvas id="preview-canvas" ref="previewCanvas" width="8" height="8"></canvas>
-  <span>{{currentFrame}}/{{images.length}}</span>
+  <p>{{currentFrame+1}}/{{images.length}}</p>
 </section>
 </template>
 

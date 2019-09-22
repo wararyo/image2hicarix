@@ -1,7 +1,8 @@
 <template>
   <div id="app">
+    <h1>Image2Hicarix</h1>
     <section>
-      <h1 class="title">Settings</h1>
+      <h2>Settings</h2>
       <b-field label="Directory" label-position="on-border">
           <b-input v-model="directory" placeholder="/path/to/your/directory/of/images/" expanded></b-input>
           <p class="control">
@@ -14,19 +15,21 @@
         </b-numberinput>
       </b-field>
     </section>
-    <section>
-      <h1 class="title">Preview</h1>
-      <viewer ref="viewer" :images="images" :speed="playSpeed" :isPlaying="isPlaying" />
-      <div class="field">
-        <b-switch v-model="isPlaying">Play</b-switch>
-      </div>
-    </section>
-    <section>
-      <h1 class="title">Writer</h1>
-      <b-button type="is-primary" @click="write">Write</b-button>
-      <canvas id="writer-canvas" ref="writerCanvas" width="2" height="2"></canvas>
-      {{Math.floor(progress*100+0.5)}}%
-    </section>
+    <div style="display:flex;justify-content:space-around;">
+      <section>
+        <h2>Preview</h2>
+        <viewer ref="viewer" :images="images" :speed="playSpeed" :isPlaying="isPlaying" />
+        <div class="field">
+          <b-switch v-model="isPlaying">Play</b-switch>
+        </div>
+      </section>
+      <section>
+        <h2>Writer</h2>
+        <canvas id="writer-canvas" ref="writerCanvas" width="2" height="2"></canvas>
+        <p>{{Math.floor(progress*100+0.5)}}%</p>
+        <b-button type="is-primary" @click="write">Write</b-button>
+      </section>
+    </div>
   </div>
 </template>
 
@@ -128,13 +131,15 @@
         data.push(0,1,1,0);
         console.log(data);
 
+        this.isPlaying = false;
+
         //start writing
         const sleep = msec => new Promise(resolve => setTimeout(resolve, msec));
         for(let i = 1;i<data.length/2;i++) {//最初の2ビットは初期状態なのでスキップ
           this.d1 = data[i*2];
           this.d2 = data[i*2+1];
           this.clk = this.clk === 0?1:0;//クロックは最後に書く
-          await sleep(100);
+          await sleep(66);
           this.progress = i / data.length * 2;
           this.$refs.viewer.currentFrame = Math.floor(this.images.length * (i / data.length * 2));
         }
@@ -149,9 +154,27 @@
 <style lang="scss">
 body {
   background-color: #FAFAFA;
+  overflow: hidden;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 #app {
-  padding: 16px;
+  height: 100vh;
+  > section {
+    margin: 24px;
+  }
+  h1 {
+    margin: 24px;
+    font-weight: bold;
+    font-size: 2rem;
+  }
+  h2 {
+    font-weight: bold;
+    font-size: 1.5rem;
+    margin-bottom: 1em;
+  }
 }
 #preview-canvas {
   width: 240px;
