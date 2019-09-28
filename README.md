@@ -35,7 +35,7 @@ Writerの正方形にWRITEモードのHicarix Badgeを重ねます。
 ## 動作確認済み環境
 * Windows 10
 * macOS Mojave
-* Ubuntu
+* Ubuntu 18.04
 
 ## Build Setup
 
