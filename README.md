@@ -12,12 +12,7 @@ Hicarix BadgeはLEDマトリクスをバッジとして鞄などに付けるこ�
 本来はスマートフォンアプリのHicarix Appにて点滅パターンの編集・書き込みを行いますが、
 Image2Hicarixを用いることで、PCで点滅パターンを編集し、書き込むことができます。
 
-### 動作確認済み環境
-* Windows 10
-* macOS Mojave
-* Ubuntu
-
-### 使用方法
+## 使用方法
 
 [Releases](https://github.com/wararyo/image2hicarix/releases)より最新バージョンをダウンロードします。  
 
@@ -36,6 +31,11 @@ Writerの正方形にWRITEモードのHicarix Badgeを重ねます。
 スイッチが左上になるようにしてください。
 
 あとは`Write`ボタンを押し、書き込みが終了するまで待機すれば完了です。
+
+## 動作確認済み環境
+* Windows 10
+* macOS Mojave
+* Ubuntu
 
 ## Build Setup
 
