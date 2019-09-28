@@ -19,7 +19,7 @@ Image2Hicarixを用いることで、PCで点滅パターンを編集し、書�
 
 ### 使用方法
 
-![Releases](releases)より最新バージョンをダウンロードします。  
+![Releases](https://github.com/wararyo/image2hicarix/releases)より最新バージョンをダウンロードします。  
 
 お好きなソフトウェアでアニメーションを作成し、連番PNGとして書き出します。
 8x8のグレースケールがおすすめです。  
